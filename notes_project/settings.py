@@ -2,6 +2,7 @@ from pathlib import Path
 from pathlib import Path
 import os
 from urllib.parse import urlsplit
+from django.core.exceptions import ImproperlyConfigured
 
 try:
     import dj_database_url  # type: ignore[import-not-found]
@@ -51,6 +52,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "notes_project.urls"
+LOGIN_URL = "login"
 
 TEMPLATES = [
     {
@@ -76,13 +78,22 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 if DATABASE_URL:
     if dj_database_url is None:
         raise ImportError("Install dj-database-url to use DATABASE_URL.")
+    database_scheme = urlsplit(DATABASE_URL).scheme
+    if not DEBUG and database_scheme not in {"postgres", "postgresql"}:
+        raise ImproperlyConfigured(
+            "Production DATABASE_URL must be a PostgreSQL connection URL."
+        )
     DATABASES = {
         "default": dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
-            ssl_require=urlsplit(DATABASE_URL).scheme in {"postgres", "postgresql"},
+            ssl_require=database_scheme in {"postgres", "postgresql"},
         )
     }
+elif not DEBUG:
+    raise ImproperlyConfigured(
+        "Set DATABASE_URL to a PostgreSQL connection URL in production."
+    )
 else:
     DATABASES = {
         "default": {
