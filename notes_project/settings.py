@@ -1,6 +1,7 @@
 from pathlib import Path
 from pathlib import Path
 import os
+from urllib.parse import urlsplit
 
 try:
     import dj_database_url  # type: ignore[import-not-found]
@@ -79,7 +80,7 @@ if DATABASE_URL:
         "default": dj_database_url.config(
             default=DATABASE_URL,
             conn_max_age=600,
-            ssl_require=True,
+            ssl_require=urlsplit(DATABASE_URL).scheme in {"postgres", "postgresql"},
         )
     }
 else:
