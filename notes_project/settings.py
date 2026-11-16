@@ -71,13 +71,24 @@ WSGI_APPLICATION = "notes_project.wsgi.application"
 # ==============================================
 # DATABASE
 # ==============================================
-DATABASES = {
-    "default": dj_database_url.config(
-        default=os.environ.get("DATABASE_URL"),
-        conn_max_age=600,
-        ssl_require=True,
-    )
-}
+DATABASE_URL = os.environ.get("DATABASE_URL")
+if DATABASE_URL:
+    if dj_database_url is None:
+        raise ImportError("Install dj-database-url to use DATABASE_URL.")
+    DATABASES = {
+        "default": dj_database_url.config(
+            default=DATABASE_URL,
+            conn_max_age=600,
+            ssl_require=True,
+        )
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # ==============================================
 # PASSWORD VALIDATION
